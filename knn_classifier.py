@@ -30,10 +30,9 @@ class KNNClassifier:
     # def _compute_distance(self, x1, x2):
     #     """Oblicza odległość między dwoma punktami (metryka euklidesowa)."""
     #     return np.sqrt(np.sum((x1 - x2) ** 2))
-    def _compute_distance(self, x1, x2):
-
-        """Oblicza odległość między dwoma punktami (metryka euklidesowa)."""
-        return np.sqrt(np.sum((x1 - x2) ** 2))
+    def _compute_distance(self, x1, x2, p=0.01):
+        """Oblicza odległość między dwoma punktami (metryka Minkowskiego, dla p = 2 to metryka euklidesowa)."""
+        return np.sum(np.abs(x1 - x2) ** p) ** (1 / p)
 
 
 
