@@ -13,24 +13,19 @@ class KNNClassifier:
 
     def predict(self, X_test):
         """Przewiduje klasy dla danych X_test."""
-        predictions = [self._predict(x) for x in X_test.values]
+        predictions = []
+        for x in X_test.values:
+            distances = []
+            for x_train in self.X_train.values:
+                distances.append(self._compute_distance(x, x_train))
+
+            k_indices = np.argsort(distances)[:self.k]
+            k_nearest_labels = self.y_train.iloc[k_indices]
+            most_common = Counter(k_nearest_labels).most_common(1)
+            predictions.append(most_common[0][0])
         return np.array(predictions)
 
-    def _predict(self, x):
-        """Pomocnicza metoda do obliczania klasy dla pojedynczego punktu x."""
-        distances = []
-        for x_train in self.X_train.values:
-            distances.append(self._compute_distance(x, x_train))
-
-        k_indices = np.argsort(distances)[:self.k]
-        k_nearest_labels = self.y_train.iloc[k_indices]
-        most_common = Counter(k_nearest_labels).most_common(1)
-        return most_common[0][0]
-
-    # def _compute_distance(self, x1, x2):
-    #     """Oblicza odległość między dwoma punktami (metryka euklidesowa)."""
-    #     return np.sqrt(np.sum((x1 - x2) ** 2))
-    def _compute_distance(self, x1, x2, p=0.01):
+    def _compute_distance(self, x1, x2, p=2):
         """Oblicza odległość między dwoma punktami (metryka Minkowskiego, dla p = 2 to metryka euklidesowa)."""
         return np.sum(np.abs(x1 - x2) ** p) ** (1 / p)
 
