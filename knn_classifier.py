@@ -2,8 +2,9 @@ import numpy as np
 from collections import Counter
 
 class KNNClassifier:
-    def __init__(self, k=3, metric='euclidean'):
+    def __init__(self, k=3, metric='euclidean', p=2):
         self.k = k
+        self.p = p
         self.metric = metric
 
     def fit(self, X_train, y_train):
@@ -25,9 +26,9 @@ class KNNClassifier:
             predictions.append(most_common[0][0])
         return np.array(predictions)
 
-    def _compute_distance(self, x1, x2, p=2):
+    def _compute_distance(self, x1, x2):
         """Oblicza odległość między dwoma punktami (metryka Minkowskiego, dla p = 2 to metryka euklidesowa)."""
-        return np.sum(np.abs(x1 - x2) ** p) ** (1 / p)
+        return np.sum(np.abs(x1 - x2) ** self.p) ** (1 / self.p)
 
 
 
