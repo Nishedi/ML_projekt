@@ -1,3 +1,5 @@
+import random
+
 import numpy as np
 from collections import Counter
 
@@ -23,6 +25,11 @@ class KNNClassifier:
             k_indices = np.argsort(distances)[:self.k]
             k_nearest_labels = self.y_train.iloc[k_indices]
             most_common = Counter(k_nearest_labels).most_common(1)
+            counter = Counter(k_nearest_labels)
+            max_count = max(counter.values())  # Znajdź największą liczbę wystąpień
+            candidates = [k for k, v in counter.items() if v == max_count]
+            chosen = random.choice(candidates)
+            #predictions.append(chosen)
             predictions.append(most_common[0][0])
         return np.array(predictions)
 

@@ -25,7 +25,6 @@ class Utils:
         elif average == 'micro':
             TP = np.sum(np.diag(confusion_matrix))
             FP = np.sum(confusion_matrix) - TP
-            print(FP)
             return TP / (TP + FP) if (TP + FP) > 0 else 0
 
 
@@ -45,7 +44,6 @@ class Utils:
         elif average == 'micro':
             TP = np.sum(np.diag(confusion_matrix))
             FN = np.sum(confusion_matrix) - TP
-            print(FN)
             return TP / (TP + FN) if (TP + FN) > 0 else 0
 
 
@@ -57,9 +55,8 @@ class Utils:
 
     def compute_confusion_matrix(self, y_true, y_pred):
         """Wyznacza macierz pomyłek."""
-        num_classes = len(np.unique(y_true))
+        num_classes = 3
         confusion_matrix = np.zeros((num_classes, num_classes), dtype=int)
-
         for true_label, pred_label in zip(y_true, y_pred):
             confusion_matrix[true_label, pred_label] += 1
 
