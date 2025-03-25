@@ -1,0 +1,39 @@
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+width=0.8\textwidth,
+ylabel={Błąd klasyfikacji},
+xlabel={Liczba sąsiadów},
+xtick={ 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 },
+legend pos=north west
+]
+\addplot[no markers, color=black]
+coordinates {
+(1,0.221)(2,0.272)(3,0.281)(4,0.294)(5,0.295)(6,0.299)(7,0.294)(8,0.303)(9,0.274)(10,0.285)(11,0.286)(12,0.285)(13,0.285)(14,0.282)(15,0.283)};
+\addlegendentry{średnio}
+\addplot[no markers, color=red]
+coordinates {
+(1,0.163)(2,0.208)(3,0.224)(4,0.247)(5,0.236)(6,0.247)(7,0.23)(8,0.28)(9,0.253)(10,0.258)(11,0.253)(12,0.236)(13,0.253)(14,0.241)(15,0.264)};
+\addlegendentry{p=1}
+\addplot[no markers, color=blue]
+coordinates {
+(1,0.196)(2,0.244)(3,0.247)(4,0.275)(5,0.267)(6,0.261)(7,0.261)(8,0.289)(9,0.261)(10,0.264)(11,0.272)(12,0.264)(13,0.264)(14,0.264)(15,0.273)};
+\addlegendentry{p=1.5}
+\addplot[no markers, color=green]
+coordinates {
+(1,0.211)(2,0.254)(3,0.266)(4,0.283)(5,0.279)(6,0.286)(7,0.277)(8,0.301)(9,0.269)(10,0.271)(11,0.275)(12,0.275)(13,0.273)(14,0.271)(15,0.273)};
+\addlegendentry{p=2}
+\addplot[no markers, color=yellow]
+coordinates {
+(1,0.218)(2,0.264)(3,0.275)(4,0.288)(5,0.288)(6,0.294)(7,0.287)(8,0.299)(9,0.271)(10,0.284)(11,0.284)(12,0.282)(13,0.282)(14,0.279)(15,0.277)};
+\addlegendentry{p=3}
+\addplot[no markers, color=purple]
+coordinates {
+(1,0.221)(2,0.272)(3,0.281)(4,0.294)(5,0.295)(6,0.299)(7,0.294)(8,0.303)(9,0.274)(10,0.285)(11,0.286)(12,0.285)(13,0.285)(14,0.282)(15,0.283)};
+\addlegendentry{p=4}
+\end{axis}
+\end{tikzpicture}
+\caption{Porówanie jakości wyników dla różnych wartości k oraz różnych próbek}
+\label{fig:k_comp}
+\end{figure}

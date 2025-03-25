@@ -29,8 +29,8 @@ class KNNClassifier:
             max_count = max(counter.values())  # Znajdź największą liczbę wystąpień
             candidates = [k for k, v in counter.items() if v == max_count]
             chosen = random.choice(candidates)
-            #predictions.append(chosen)
-            predictions.append(most_common[0][0])
+            predictions.append(chosen)
+            #predictions.append(most_common[0][0])
         return np.array(predictions)
 
     def _compute_distance(self, x1, x2):
