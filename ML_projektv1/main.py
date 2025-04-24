@@ -78,7 +78,6 @@ seed = 512
 data = load_wine()
 X = pd.DataFrame(data.data, columns=data.feature_names)
 y = pd.Series(data.target)
-
 k_values = range(1, 16)
 p_values = [1, 1.5, 2, 3, 4]
 
