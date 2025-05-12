@@ -1,7 +1,7 @@
 
 from sklearn.datasets import load_wine
 from sklearn.model_selection import train_test_split
-from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_tsne_decision_boundary_perceptron
+from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_tsne_decision_boundary_perceptron, plot_points
 from OvRClassifier import OvRClassifier
 from Perceptron import Perceptron
 
@@ -31,8 +31,9 @@ print("Recall:", recall(y_test, y_pred, average='macro'))
 print("F1 Score:", f1_score(y_test, y_pred, average='macro'))
 
 from OvRClassifier import OvRClassifier
-plot_tsne_decision_boundary_perceptron(
-    X, y,
-    base_model_class=OvRClassifier,
-    model_kwargs={"base_class": Perceptron, "learning_rate": 0.01, "n_iter": 1000}
-)
+# plot_tsne_decision_boundary_perceptron(
+#     X, y,
+#     base_model_class=OvRClassifier,
+#     model_kwargs={"base_class": Perceptron, "learning_rate": 0.01, "n_iter": 1000}
+# )
+plot_points(X,y)
