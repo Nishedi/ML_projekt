@@ -15,7 +15,7 @@ class Perceptron:
 
         y_train = np.where(y_train <= 0, -1, 1)
         for _ in range(self.n_iter):
-            for idx, x_i in enumerate(X_train):
+            for idx, x_i in enumerate(X_train.values):
                 linear_output = np.dot(x_i, self.weights) + self.bias
                 y_pred = self._heaviside(linear_output)
 
@@ -26,7 +26,7 @@ class Perceptron:
         linear_output = np.dot(X, self.weights) + self.bias
         return self._activation(linear_output)
 
-    
+
     def predict_proba(self, X):
         return np.dot(X, self.weights) + self.bias
     def _activation(self, x):

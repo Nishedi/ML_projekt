@@ -7,49 +7,6 @@ import numpy as np
 from OvRClassifier import OvRClassifier
 from Perceptron import Perceptron
 
-
-def plot_tsne_decision_boundary_perceptron(X, y, perceptron_model, filename="tsne_perceptron.png", seed=512):
-    X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
-    X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
-
-    perceptron_model.fit(X_embedded, y)
-
-    h = 0.5
-    x_min, x_max = X_embedded[:, 0].min() - 1, X_embedded[:, 0].max() + 1
-    y_min, y_max = X_embedded[:, 1].min() - 1, X_embedded[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                         np.arange(y_min, y_max, h))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-    grid_df = pd.DataFrame(grid_points, columns=["dim1", "dim2"])
-    grid_pred = perceptron_model.predict(grid_df)
-    Z = np.array(grid_pred).reshape(xx.shape)
-
-    plt.figure(figsize=(10, 6))
-    cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
-    cmap_bold = ["red", "green", "blue"]
-
-    plt.contourf(xx, yy, Z, alpha=0.3, cmap=cmap_light)
-
-    for class_value in np.unique(y):
-        idx = y == class_value
-        plt.scatter(
-            X_embedded_df.loc[idx, "dim1"],
-            X_embedded_df.loc[idx, "dim2"],
-            label=f"Klasa {class_value}",
-            c=cmap_bold[class_value],
-            edgecolor="k",
-            s=60
-        )
-
-    plt.title("t-SNE: Granice decyzyjne Perceptronu")
-    plt.xlabel("Wymiar 1 (t-SNE)")
-    plt.ylabel("Wymiar 2 (t-SNE)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=300)
-    plt.close()
-
 def compute_accuracy(y_true, y_pred):
     """Oblicza dokładność klasyfikacji."""
     return np.mean(y_true == y_pred)
@@ -121,25 +78,12 @@ def variance_threshold(X, threshold=0.01):
     selected_columns = variances >= threshold
     return X[:, selected_columns], selected_columns
 
-
-
-def plot_tsne_decision_boundary_perceptron(X, y, base_model_class, model_kwargs=None, filename="tsne_perceptron.png", seed=512):
-    print(len(y))
-    from sklearn.manifold import TSNE
-    from matplotlib.colors import ListedColormap
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import numpy as np
-
-    if model_kwargs is None:
-        model_kwargs = {}
-
+def plot_points(X, y, seed = 512, filename="tsne_visualisation.png"):
     X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
     X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
 
-    # Trenujemy nowy model na zredukowanych danych do wizualizacji
-    model = base_model_class(**model_kwargs)
-    model.fit(X_embedded, y)
+    model_emb = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
+    model_emb.fit(X_embedded_df, y)
 
     h = 0.5
     x_min, x_max = X_embedded[:, 0].min() - 1, X_embedded[:, 0].max() + 1
@@ -147,60 +91,15 @@ def plot_tsne_decision_boundary_perceptron(X, y, base_model_class, model_kwargs=
     xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
                          np.arange(y_min, y_max, h))
     grid_points = np.c_[xx.ravel(), yy.ravel()]
-
-    grid_df = pd.DataFrame(grid_points, columns=["dim1", "dim2"])
-    grid_pred = model.predict(grid_df)
-    Z = np.array(grid_pred).reshape(xx.shape)
-
-    plt.figure(figsize=(10, 6))
-    cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
-    cmap_bold = ["red", "green", "blue"]
-
-    plt.contourf(xx, yy, Z, alpha=0.3, cmap=cmap_light)
-
-    for class_value in np.unique(y):
-        idx = y == class_value
-        plt.scatter(
-            X_embedded_df.loc[idx, "dim1"],
-            X_embedded_df.loc[idx, "dim2"],
-            label=f"Klasa {class_value}",
-            c=cmap_bold[class_value],
-            edgecolor="k",
-            s=60
-        )
-
-    plt.title("t-SNE: Granice decyzyjne Perceptronu (osobny model)")
-    plt.xlabel("Wymiar 1 (t-SNE)")
-    plt.ylabel("Wymiar 2 (t-SNE)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=300)
-    plt.close()
-
-def plot_decision_boundaries(X, y,  filename, seed=512):
-    # dimension reduction
-    X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
-    X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
-    model_emb = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
-        # Create a grid of points covering the 2D t-SNE space
-    h = 0.5  # Step size for the grid
-    x_min, x_max = X_embedded[:, 0].min() - 1, X_embedded[:, 0].max() + 1
-    y_min, y_max = X_embedded[:, 1].min() - 1, X_embedded[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                             np.arange(y_min, y_max, h))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
     grid_df = pd.DataFrame(grid_points, columns=["dim1", "dim2"])
 
-        # Predict class labels for each point in the grid
     grid_pred = model_emb.predict(grid_df)
     Z = np.array(grid_pred).reshape(xx.shape)
 
-        # Plot
+
     plt.figure(figsize=(10, 6))
     cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
     cmap_bold = ["red", "green", "blue"]
-
     plt.contourf(xx, yy, Z, alpha=0.3, cmap=cmap_light)
 
     for class_value in np.unique(y):
@@ -213,34 +112,7 @@ def plot_decision_boundaries(X, y,  filename, seed=512):
             edgecolor="k",
             s=60
         )
-
-    plt.xlabel("Wymiar 1 (t-SNE)")
-    plt.ylabel("Wymiar 2 (t-SNE)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=300)
-    plt.close()
-
-def plot_points(X, y, seed = 512):
-    X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
-    X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
-
-    plt.figure(figsize=(10, 6))
-    cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
-    cmap_bold = ["red", "green", "blue"]
-
-    for class_value in np.unique(y):
-        idx = y == class_value
-        plt.scatter(
-            X_embedded_df.loc[idx, "dim1"],
-            X_embedded_df.loc[idx, "dim2"],
-            label=f"Klasa {class_value}",
-            c=cmap_bold[class_value],
-            edgecolor="k",
-            s=60
-        )
-    plt.title(f"t-SNE: Granice decyzyjne k-NN (k={k}, p={p})")
+    plt.title(f"t-SNE: Granice decyzyjne OvR")
     plt.xlabel("Wymiar 1 (t-SNE)")
     plt.ylabel("Wymiar 2 (t-SNE)")
     plt.legend()
