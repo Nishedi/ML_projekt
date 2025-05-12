@@ -74,9 +74,11 @@ def standard_scale(X):
     return X_scaled
 
 def variance_threshold(X, threshold=0.01):
-    variances = np.var(X, axis=0)
+    # Zakładamy, że X to pandas DataFrame
+    variances = X.var(axis=0)  # domyślnie ddof=1, dla zgodności można dodać ddof=0
     selected_columns = variances >= threshold
-    return X[:, selected_columns], selected_columns
+    return X.loc[:, selected_columns], selected_columns
+
 
 def plot_points(X, y, seed = 512, filename="tsne_visualisation.png"):
     X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
