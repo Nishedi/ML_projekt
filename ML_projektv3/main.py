@@ -1,25 +1,73 @@
+import numpy as np
 import sklearn.svm as svm
+import pandas as pd
 from sklearn.datasets import load_wine
-from sklearn.model_selection import train_test_split
-from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_points, variance_threshold
+from sklearn.model_selection import train_test_split, StratifiedKFold
+from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_points, variance_threshold, compute_confusion_matrix
 from OvRClassifier import OvRClassifier
 from Perceptron import Perceptron
-import pandas as pd
+
 
 withStandardScaler = True
 withVarianceThreshold = True
-def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPloting=False):
+
+def test_with_crossvalidation(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPloting=False, k_fold=5, seed=42):
+    skf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=seed)
     data = load_wine()
     X = pd.DataFrame(data.data, columns=data.feature_names)
     y = pd.Series(data.target)
     if withVarianceThreshold:
-        X, _ = variance_threshold(X, threshold=0.1)
+        X, _ = variance_threshold(X, threshold=0.01)
     # Przeskalowanie
     if withStandardScaler:
         X = standard_scale(X)
 
+    scores_f1 = []
+    scores_precision = []
+    scores_recall = []
+    scores_accuracy = []
+    for train_idx, val_idx in skf.split(X, y):
+        X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
+        y_train, y_val = y.iloc[train_idx], y.iloc[val_idx]
+        model = None
+        if isSvm:
+            model = svm.SVC(kernel='linear', C=1.0, random_state=42)
+        else:
+            model = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_val)
+        score_f1 = f1_score(y_val, y_pred)
+        scores_f1.append(score_f1)
+        accuracy = compute_accuracy(y_val, y_pred)
+        precision_score = precision(y_val, y_pred)
+        recall_score = recall(y_val, y_pred)
+        scores_accuracy.append(accuracy)
+        scores_precision.append(precision_score)
+        scores_recall.append(recall_score)
+    mean_score_f1 = np.mean(scores_f1)
+    mean_accuracy = np.mean(scores_accuracy)
+    mean_precision = np.mean(scores_precision)
+    mean_recall = np.mean(scores_recall)
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    if isPloting:
+        print("Accuracy:", round(mean_accuracy,3))
+        print("Precision:", round(mean_precision,3))
+        print("Recall:", round(mean_recall,3))
+        print("F1 Score:", round(mean_score_f1,3))
+
+    return round(mean_accuracy,3), round(mean_precision,3), round(mean_recall,3), round(mean_score_f1,3)
+def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPloting=False):
+    data = load_wine()
+    X = pd.DataFrame(data.data, columns=data.feature_names)
+    y = pd.Series(data.target)
+    # if withVarianceThreshold:
+    #     X, _ = variance_threshold(X, threshold=0.1)
+    # # Przeskalowanie
+    # if withStandardScaler:
+    #     X = standard_scale(X)
+
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
     # Model OvR
     model = None
@@ -38,13 +86,19 @@ def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPlot
 
 
     if isPloting:
-        plot_points(X, y)
-        print("Accuracy:", accuracy)
-        print("Precision:", _precision)
-        print("Recall:", _recall)
-        print("F1 Score:", f1)
+        filename="x.png"
+        if isSvm:
+            filename = "svm_tsne_visualisation.png"
+        else:
+            filename = "tsne_visualisation.png"
+        plot_points(X, y,filename=filename)
+        print("Accuracy:", round(accuracy,3))
+        print("Precision:", round(_precision,3))
+        print("Recall:", round(_recall,3))
+        print("F1 Score:", round(f1,3))
+        print("Confusion Matrix:\n", compute_confusion_matrix(y_test, y_pred))
 
-    return accuracy, _precision, _recall, f1
+    return round(accuracy,3), round(_precision,3), round(_recall,3), round(f1,3)
 
 
 def check_impact_of_variance_and_scaling():
@@ -68,4 +122,10 @@ def check_impact_of_variance_and_scaling():
     print("Srednia accuracy dla znormalizowanych danych z progowaniem: ", w/num_of_rep)
     print("Srednia accuracy dla nienormalizowanych danych z progowaniem: ", z/num_of_rep)
 
-check_impact_of_variance_and_scaling()
+print("OvR")
+test_with_crossvalidation(False, withStandardScaler, withVarianceThreshold, True)
+print("SVM")
+test_with_crossvalidation(True, withStandardScaler, withVarianceThreshold, True)
+print("----------------------")
+test(False,True, True, True)
+test(True, True, True, True)
