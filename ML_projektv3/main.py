@@ -23,8 +23,11 @@ def test_with_crossvalidation(isSvm=False,withStandardScaler=True, withVarianceT
         X = standard_scale(X)
 
     scores_f1 = []
+    scores_f1_micro = []
     scores_precision = []
+    scores_precision_micro = []
     scores_recall = []
+    scores_recall_micro = []
     scores_accuracy = []
     for train_idx, val_idx in skf.split(X, y):
         X_train, X_val = X.iloc[train_idx], X.iloc[val_idx]
@@ -37,42 +40,54 @@ def test_with_crossvalidation(isSvm=False,withStandardScaler=True, withVarianceT
         model.fit(X_train, y_train)
         y_pred = model.predict(X_val)
         score_f1 = f1_score(y_val, y_pred)
+        score_f1_micro = f1_score(y_val, y_pred, average='micro')
         scores_f1.append(score_f1)
         accuracy = compute_accuracy(y_val, y_pred)
         precision_score = precision(y_val, y_pred)
+        precision_score_micro = precision(y_val, y_pred, average='micro')
         recall_score = recall(y_val, y_pred)
+        recall_score_micro = recall(y_val, y_pred, average='micro')
         scores_accuracy.append(accuracy)
         scores_precision.append(precision_score)
         scores_recall.append(recall_score)
+        scores_precision_micro.append(precision_score_micro)
+        scores_recall_micro.append(recall_score_micro)
+        scores_f1_micro.append(score_f1_micro)
+
     mean_score_f1 = np.mean(scores_f1)
     mean_accuracy = np.mean(scores_accuracy)
     mean_precision = np.mean(scores_precision)
     mean_recall = np.mean(scores_recall)
+    mean_score_f1_micro = np.mean(scores_f1_micro)
+    mean_precision_micro = np.mean(scores_precision_micro)
+    mean_recall_micro = np.mean(scores_recall_micro)
 
     if isPloting:
         print("Accuracy:", round(mean_accuracy,3))
         print("Precision:", round(mean_precision,3))
+        print("Precision Micro:", round(mean_precision_micro,3))
         print("Recall:", round(mean_recall,3))
+        print("Recall Micro:", round(mean_recall_micro,3))
         print("F1 Score:", round(mean_score_f1,3))
+        print("F1 Score Micro:", round(mean_score_f1_micro,3))
+
 
     return round(mean_accuracy,3), round(mean_precision,3), round(mean_recall,3), round(mean_score_f1,3)
-def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPloting=False):
+def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPloting=False, random_state=42):
     data = load_wine()
     X = pd.DataFrame(data.data, columns=data.feature_names)
     y = pd.Series(data.target)
-    # if withVarianceThreshold:
-    #     X, _ = variance_threshold(X, threshold=0.1)
-    # # Przeskalowanie
-    # if withStandardScaler:
-    #     X = standard_scale(X)
+    if withVarianceThreshold:
+        X, _ = variance_threshold(X, threshold=0.1)
+    if withStandardScaler:
+        X = standard_scale(X)
 
 
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=random_state, stratify=y)
 
-    # Model OvR
     model = None
     if isSvm:
-        model = svm.SVC(kernel='linear', C=1.0, random_state=42)
+        model = svm.SVC(kernel='linear', C=1.0, random_state=random_state)
     else:
         model = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
     model.fit(X_train, y_train)
@@ -91,7 +106,7 @@ def test(isSvm=False,withStandardScaler=True, withVarianceThreshold=True, isPlot
             filename = "svm_tsne_visualisation.png"
         else:
             filename = "tsne_visualisation.png"
-        plot_points(X, y,filename=filename)
+        plot_points(X, y,filename=filename, isSvm=isSvm,random_state=random_state)
         print("Accuracy:", round(accuracy,3))
         print("Precision:", round(_precision,3))
         print("Recall:", round(_recall,3))
@@ -126,6 +141,7 @@ print("OvR")
 test_with_crossvalidation(False, withStandardScaler, withVarianceThreshold, True)
 print("SVM")
 test_with_crossvalidation(True, withStandardScaler, withVarianceThreshold, True)
-print("----------------------")
-test(False,True, True, True)
-test(True, True, True, True)
+# print("----------------------")
+# test(False,True, True, True,random_state=42)
+# test(True, True, True, True,random_state=42)
+

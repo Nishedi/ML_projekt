@@ -1,3 +1,4 @@
+from sklearn import svm
 from sklearn.manifold import TSNE
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
@@ -80,45 +81,54 @@ def variance_threshold(X, threshold=0.01):
     return X.loc[:, selected_columns], selected_columns
 
 
-def plot_points(X, y, seed = 512, filename="tsne_visualisation.png"):
-    X_embedded = TSNE(n_components=2, random_state=seed).fit_transform(X)
-    X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
+def plot_points(X, y, seed = 512, filename="tsne_visualisation.png",isSvm=False,random_state=42):
+    params_list = [
+        {'perplexity': 50, 'learning_rate': 100, 'random_state': 42},
+    ]
+    for params in params_list:
+        filename=str(params['perplexity'])+str(3)+filename
+        X_embedded = TSNE(n_components=2, **params).fit_transform(X)
+        X_embedded_df = pd.DataFrame(X_embedded, columns=["dim1", "dim2"])
 
-    model_emb = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
-    model_emb.fit(X_embedded_df, y)
+        model_emb = None
+        if isSvm:
+            model_emb = svm.SVC(kernel='linear', C=1.0, random_state=random_state)
+        else:
+            model_emb = OvRClassifier(base_class=Perceptron, learning_rate=0.01, n_iter=1000)
+        model_emb.fit(X_embedded_df, y)
 
-    h = 0.5
-    x_min, x_max = X_embedded[:, 0].min() - 1, X_embedded[:, 0].max() + 1
-    y_min, y_max = X_embedded[:, 1].min() - 1, X_embedded[:, 1].max() + 1
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
-                         np.arange(y_min, y_max, h))
-    grid_points = np.c_[xx.ravel(), yy.ravel()]
-    grid_df = pd.DataFrame(grid_points, columns=["dim1", "dim2"])
+        h = 0.5
+        x_min, x_max = X_embedded[:, 0].min() - 1, X_embedded[:, 0].max() + 1
+        y_min, y_max = X_embedded[:, 1].min() - 1, X_embedded[:, 1].max() + 1
+        xx, yy = np.meshgrid(np.arange(x_min, x_max, h),
+                             np.arange(y_min, y_max, h))
+        grid_points = np.c_[xx.ravel(), yy.ravel()]
+        grid_df = pd.DataFrame(grid_points, columns=["dim1", "dim2"])
 
-    grid_pred = model_emb.predict(grid_df)
-    Z = np.array(grid_pred).reshape(xx.shape)
+        grid_pred = model_emb.predict(grid_df)
+        Z = np.array(grid_pred).reshape(xx.shape)
 
 
-    plt.figure(figsize=(10, 6))
-    cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
-    cmap_bold = ["red", "green", "blue"]
-    plt.contourf(xx, yy, Z, alpha=0.3, cmap=cmap_light)
+        plt.figure(figsize=(10, 6))
+        cmap_light = ListedColormap(["#FFAAAA", "#AAFFAA", "#AAAAFF"])
+        cmap_bold = ["red", "green", "blue"]
+        plt.contourf(xx, yy, Z, alpha=0.3, cmap=cmap_light)
 
-    for class_value in np.unique(y):
-        idx = y == class_value
-        plt.scatter(
-            X_embedded_df.loc[idx, "dim1"],
-            X_embedded_df.loc[idx, "dim2"],
-            label=f"Klasa {class_value}",
-            c=cmap_bold[class_value],
-            edgecolor="k",
-            s=60
-        )
-    plt.title(f"t-SNE: Granice decyzyjne OvR")
-    plt.xlabel("Wymiar 1 (t-SNE)")
-    plt.ylabel("Wymiar 2 (t-SNE)")
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.savefig(filename, dpi=300)
-    plt.close()
+        for class_value in np.unique(y):
+            idx = y == class_value
+            plt.scatter(
+                X_embedded_df.loc[idx, "dim1"],
+                X_embedded_df.loc[idx, "dim2"],
+                label=f"Klasa {class_value}",
+                c=cmap_bold[class_value],
+                edgecolor="k",
+                s=60
+            )
+        plt.title(f"t-SNE: Granice decyzyjne OvR")
+        plt.xlabel("Wymiar 1 (t-SNE)")
+        plt.ylabel("Wymiar 2 (t-SNE)")
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.savefig(filename, dpi=300)
+        plt.close()
