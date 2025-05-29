@@ -1,0 +1,4 @@
+bagging;0.977;0.978;0.98;0.979;{'max_samples': 0.1, 'n_estimators': 150}
+gradient boosting;0.95;0.954;0.954;0.954;{'learning_rate': 0.1, 'n_estimators': 150}
+hist gradient boosting;0.972;0.971;0.975;0.973;{'learning_rate': 0.2, 'max_depth': 3}
+random forest;0.983;0.983;0.986;0.984;{'max_depth': 3, 'n_estimators': 100}
