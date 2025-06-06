@@ -1,6 +1,0 @@
-model;accuracy;precision_macro;precision_micro;recall_macro;recall_micro;f1_macro;f1_micro;learning_time;prediction_time
-knn;0.978;0.978;0.978;0.981;0.978;0.979;0.978;0.0;0.017
-ovr;0.983;0.984;0.983;0.984;0.983;0.984;0.983;1.913;0.0
-bagging;0.977;0.978;0.977;0.98;0.977;0.979;0.977;0.138;0.011
-gradient boosting;0.95;0.954;0.95;0.954;0.95;0.954;0.95;0.324;0.001
-hist gradient boosting;0.972;0.971;0.972;0.975;0.972;0.973;0.972;0.086;0.003

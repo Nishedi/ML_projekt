@@ -1,5 +1,6 @@
 import csv
 import os
+import random
 import time
 
 import numpy as np
@@ -11,7 +12,7 @@ from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearc
 from sklearn.tree import DecisionTreeClassifier
 
 from knn_classifier import KNNClassifier
-from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_points, variance_threshold, compute_confusion_matrix
+from utils import compute_accuracy, precision, recall, f1_score, standard_scale, plot_points, compute_confusion_matrix
 from OvRClassifier import OvRClassifier
 from Perceptron import Perceptron
 
@@ -22,14 +23,31 @@ csv_file = "metrics.csv"
 file_exists = os.path.isfile(csv_file)
 if file_exists:
     os.remove(csv_file)
+if os.path.isfile("metrixTime.csv"):
+    os.remove("metrixTime.csv")
+
+def test_with_confusion_matrix(model, model_name, withStandardScaler=True, random_state=42):
+    data = load_wine()
+    X = pd.DataFrame(data.data, columns=data.feature_names)
+    y = pd.Series(data.target)
+
+    if withStandardScaler:
+        X = standard_scale(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=random_state, stratify=y)
+
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    print(f"Model: {model_name}")
+    print("Confusion Matrix:\n", compute_confusion_matrix(y_test, y_pred))
+
 
 def test_with_crossvalidation(model,model_name,withStandardScaler=True, withVarianceThreshold=True, isPloting=False, k_fold=5, seed=42):
     skf = StratifiedKFold(n_splits=k_fold, shuffle=True, random_state=seed)
     data = load_wine()
     X = pd.DataFrame(data.data, columns=data.feature_names)
     y = pd.Series(data.target)
-    if withVarianceThreshold:
-        X, _ = variance_threshold(X, threshold=0.01)
+
     # Przeskalowanie
     if withStandardScaler:
         X = standard_scale(X)
@@ -89,6 +107,7 @@ def test_with_crossvalidation(model,model_name,withStandardScaler=True, withVari
         print("Prediction Time:", round(mean_time_prediction,3))
 
 
+
         file_exists = os.path.isfile(csv_file)
 
         with open(csv_file, mode='a', newline='') as file:
@@ -97,7 +116,7 @@ def test_with_crossvalidation(model,model_name,withStandardScaler=True, withVari
             if not file_exists:
                 writer.writerow([
                     "model", "accuracy", "precision_macro", "precision_micro",
-                    "recall_macro", "recall_micro", "f1_macro", "f1_micro", "learning_time", "prediction_time"
+                    "recall_macro", "recall_micro", "f1_macro", "f1_micro"
                 ])
 
             writer.writerow([
@@ -108,18 +127,25 @@ def test_with_crossvalidation(model,model_name,withStandardScaler=True, withVari
                 round(mean_recall, 3),
                 round(mean_recall_micro, 3),
                 round(mean_score_f1, 3),
-                round(mean_score_f1_micro, 3),
+                round(mean_score_f1_micro, 3)
+            ])
+
+        with open("metrixTime.csv", mode='a', newline='') as file:
+            writer = csv.writer(file, delimiter=';')
+            if not file_exists:
+                writer.writerow(["model", "learning_time", "prediction_time"])
+            writer.writerow([
+                model_name,
                 round(mean_time_learning, 3),
                 round(mean_time_prediction, 3)
             ])
+
     return round(mean_accuracy,3), round(mean_precision,3), round(mean_recall,3), round(mean_score_f1,3), round(mean_time_learning,3), round(mean_time_prediction,3)
 
 def optimize_models():
     data = load_wine()
     X = pd.DataFrame(data.data, columns=data.feature_names)
     y = pd.Series(data.target)
-
-    X, _ = variance_threshold(X, threshold=0.01)
     X = standard_scale(X)
 
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
@@ -137,7 +163,7 @@ def optimize_models():
     grid_bagging.fit(X, y)
     best_bagging = grid_bagging.best_estimator_
     print(f"\nBest Bagging Params: {grid_bagging.best_params_}")
-    acc, prec, rec, f1 = test_with_crossvalidation(best_bagging, "bagging", isPloting=True)
+    acc, prec, rec, f1, t1, t2 = test_with_crossvalidation(best_bagging, "bagging", isPloting=True)
     results.append(["bagging", acc, prec, rec, f1, str(grid_bagging.best_params_)])
 
     # === 2. GradientBoostingClassifier ===
@@ -151,7 +177,7 @@ def optimize_models():
     grid_gb.fit(X, y)
     best_gb = grid_gb.best_estimator_
     print(f"\nBest Gradient Boosting Params: {grid_gb.best_params_}")
-    acc, prec, rec, f1 = test_with_crossvalidation(best_gb, "gradient boosting", isPloting=True)
+    acc, prec, rec, f1, t1, t2 = test_with_crossvalidation(best_gb, "gradient boosting", isPloting=True)
     results.append(["gradient boosting", acc, prec, rec, f1, str(grid_gb.best_params_)])
 
     # === 3. HistGradientBoostingClassifier ===
@@ -165,7 +191,7 @@ def optimize_models():
     grid_hist.fit(X, y)
     best_hist = grid_hist.best_estimator_
     print(f"\nBest HistGradientBoosting Params: {grid_hist.best_params_}")
-    acc, prec, rec, f1 = test_with_crossvalidation(best_hist, "hist gradient boosting", isPloting=True)
+    acc, prec, rec, f1, t1, t2 = test_with_crossvalidation(best_hist, "hist gradient boosting", isPloting=True)
     results.append(["hist gradient boosting", acc, prec, rec, f1, str(grid_hist.best_params_)])
 
     # === 4. RandomForest ===
@@ -179,7 +205,7 @@ def optimize_models():
     grid_rf.fit(X, y)
     best_rf = grid_rf.best_estimator_
     print(f"\nBest Random Forest Params: {grid_rf.best_params_}")
-    acc, prec, rec, f1 = test_with_crossvalidation(best_rf, "random forest", isPloting=True)
+    acc, prec, rec, f1, t1, t2 = test_with_crossvalidation(best_rf, "random forest", isPloting=True)
     results.append(["random forest", acc, prec, rec, f1, str(grid_rf.best_params_)])
 
 
@@ -200,16 +226,22 @@ model_bagging_classifier = BaggingClassifier(n_estimators=150, max_samples=0.1, 
 model_gradient_boosting = GradientBoostingClassifier(n_estimators=150, learning_rate=0.1, random_state=42), "gradient boosting"
 model_hist_gradient_boosting_classifier = HistGradientBoostingClassifier(learning_rate=0.2, max_depth=3, random_state=42), "hist gradient boosting"
 
-print("KNN")
-test_with_crossvalidation(model_knn, model_knn_name, withStandardScaler, withVarianceThreshold, True)
-print("OvR")
-test_with_crossvalidation(model_ovr[0], model_ovr[1], withStandardScaler, withVarianceThreshold, True)
-print("Bagging")
-test_with_crossvalidation(model_bagging_classifier[0],model_bagging_classifier[1], withStandardScaler, withVarianceThreshold, True)
-print("Gradient Boosting")
-test_with_crossvalidation(model_gradient_boosting[0],model_gradient_boosting[1], withStandardScaler, withVarianceThreshold, True)
-print("Hist Gradient Boosting")
-test_with_crossvalidation(model_hist_gradient_boosting_classifier[0],model_hist_gradient_boosting_classifier[1], withStandardScaler, withVarianceThreshold, True)
+# print("KNN")
+# test_with_crossvalidation(model_knn, model_knn_name, withStandardScaler, withVarianceThreshold, True)
+# print("OvR")
+# test_with_crossvalidation(model_ovr[0], model_ovr[1], withStandardScaler, withVarianceThreshold, True)
+# print("Bagging")
+# test_with_crossvalidation(model_bagging_classifier[0],model_bagging_classifier[1], withStandardScaler, withVarianceThreshold, True)
+# print("Gradient Boosting")
+# test_with_crossvalidation(model_gradient_boosting[0],model_gradient_boosting[1], withStandardScaler, withVarianceThreshold, True)
+# print("Hist Gradient Boosting")
+# test_with_crossvalidation(model_hist_gradient_boosting_classifier[0],model_hist_gradient_boosting_classifier[1], withStandardScaler, withVarianceThreshold, True)
+#
+test_with_confusion_matrix(model_knn, model_knn_name, withStandardScaler)
+test_with_confusion_matrix(model_ovr[0], model_ovr[1], withStandardScaler)
+test_with_confusion_matrix(model_bagging_classifier[0], model_bagging_classifier[1], withStandardScaler)
+test_with_confusion_matrix(model_gradient_boosting[0], model_gradient_boosting[1], withStandardScaler)
+test_with_confusion_matrix(model_hist_gradient_boosting_classifier[0], model_hist_gradient_boosting_classifier[1], withStandardScaler)
 
 # optimize_models()
 

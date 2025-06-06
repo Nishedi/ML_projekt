@@ -75,10 +75,15 @@ def standard_scale(X):
     return X_scaled
 
 def variance_threshold(X, threshold=0.01):
-    # Zakładamy, że X to pandas DataFrame
-    variances = X.var(axis=0)  # domyślnie ddof=1, dla zgodności można dodać ddof=0
+    variances = X.var(axis=0)
     selected_columns = variances >= threshold
+    removed_features = X.columns[~selected_columns].tolist()
+    if removed_features:
+        print("Usunięte cechy (wariancja < {}): {}".format(threshold, removed_features))
+    else:
+        print("Nie usunięto żadnych cech (wszystkie spełniają próg wariancji).")
     return X.loc[:, selected_columns], selected_columns
+
 
 
 def plot_points(X, y, seed = 512, filename="tsne_visualisation.png",isSvm=False,random_state=42):

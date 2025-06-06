@@ -1,0 +1,16 @@
+\begin{table}
+\centering
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}
+\hline
+model&accuracy&precision macro&precision micro&recall macro&recall micro&f1 macro&f1 micro\\ \hline
+knn&0.978&0.978&0.978&0.981&0.978&0.979&0.978\\ \hline
+ovr&0.972&0.974&0.972&0.973&0.972&0.973&0.972\\ \hline
+bagging&0.977&0.978&0.977&0.98&0.977&0.979&0.977\\ \hline
+gradient boosting&0.95&0.954&0.95&0.954&0.95&0.954&0.95\\ \hline
+hist gradient boosting&0.972&0.971&0.972&0.975&0.972&0.973&0.972\\ \hline
+\end{tabular}
+}
+\caption{Porównanie metryk jakoœci klasyfikatorów.}
+\label{tab:metrics_comp}
+\end{table}
